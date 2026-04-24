@@ -1,28 +1,18 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
 namespace EditorVisualTweaks
 {
-    /// <summary>
-    /// Provides visual enhancements for the Hierarchy and Project windows.
-    /// Access settings via Edit > Preferences > Editor Visuals.
-    /// </summary>
     [InitializeOnLoad]
     public static class EditorVisualTweaks
     {
-        // ─────────────────────────────────────────────────────────────────────
-        // EditorPrefs Keys
-        // ─────────────────────────────────────────────────────────────────────
         private const string PREF_HIERARCHY_ZEBRA = "EditorVisuals.HierarchyZebra";
         private const string PREF_PROJECT_ZEBRA = "EditorVisuals.ProjectZebra";
         private const string PREF_HIERARCHY_LINES = "EditorVisuals.HierarchyLines";
         private const string PREF_PROJECT_LINES = "EditorVisuals.ProjectLines";
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Properties (cached for performance)
-        // ─────────────────────────────────────────────────────────────────────
         private static bool _hierarchyZebra;
         private static bool _projectZebra;
         private static bool _hierarchyLines;
@@ -76,9 +66,6 @@ namespace EditorVisualTweaks
             }
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Colors
-        // ─────────────────────────────────────────────────────────────────────
         private static Color ZebraColor => EditorGUIUtility.isProSkin
             ? new Color(1f, 1f, 1f, 0.04f)
             : new Color(0f, 0f, 0f, 0.06f);
@@ -87,25 +74,17 @@ namespace EditorVisualTweaks
             ? new Color(0.4f, 0.4f, 0.4f, 0.6f)
             : new Color(0.5f, 0.5f, 0.5f, 0.6f);
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Constants
-        // ─────────────────────────────────────────────────────────────────────
         private const float HIERARCHY_INDENT = 14f;
         private const float HIERARCHY_BASE_OFFSET = 60f;
         private const float LINE_WIDTH = 1f;
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Static Constructor
-        // ─────────────────────────────────────────────────────────────────────
         static EditorVisualTweaks()
         {
-            // Load preferences
             _hierarchyZebra = EditorPrefs.GetBool(PREF_HIERARCHY_ZEBRA, false);
             _projectZebra = EditorPrefs.GetBool(PREF_PROJECT_ZEBRA, false);
             _hierarchyLines = EditorPrefs.GetBool(PREF_HIERARCHY_LINES, false);
             _projectLines = EditorPrefs.GetBool(PREF_PROJECT_LINES, false);
 
-            // Subscribe to callbacks
             EditorApplication.hierarchyWindowItemOnGUI -= OnHierarchyWindowItemGUI;
             EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyWindowItemGUI;
 
@@ -113,9 +92,6 @@ namespace EditorVisualTweaks
             EditorApplication.projectWindowItemOnGUI += OnProjectWindowItemGUI;
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Hierarchy Window Callback
-        // ─────────────────────────────────────────────────────────────────────
         private static void OnHierarchyWindowItemGUI(int instanceID, Rect selectionRect)
         {
             if (!_hierarchyZebra && !_hierarchyLines)
@@ -139,16 +115,11 @@ namespace EditorVisualTweaks
 
         
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Project Window Callback
-        // ─────────────────────────────────────────────────────────────────────
         private static void OnProjectWindowItemGUI(string guid, Rect selectionRect)
         {
             if (!_projectZebra && !_projectLines)
                 return;
 
-            // Project view in icon/grid mode has different row heights
-            // Only apply zebra/lines in list view (height <= 20)
             if (selectionRect.height > 20f)
                 return;
 
@@ -164,10 +135,6 @@ namespace EditorVisualTweaks
                 {
                     int depth = GetProjectDepth(path);
                     
-                    // Skip drawing in the right content pane (two-column layout)
-                    // In the tree view, items are indented: deeper items have larger x values
-                    // In the content pane, all items start at a small fixed x (< 20) regardless of depth
-                    // We only draw lines for items that appear to be in the tree view (indented)
                     float minTreeX = 32f; // Minimum x for first-level items in tree view
                     if (selectionRect.x < minTreeX)
                         return;
@@ -178,16 +145,12 @@ namespace EditorVisualTweaks
             }
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Drawing Methods
-        // ─────────────────────────────────────────────────────────────────────
         private static void DrawZebraStripe(Rect selectionRect)
         {
             int rowIndex = Mathf.FloorToInt(selectionRect.y / selectionRect.height);
             if (rowIndex % 2 == 0)
                 return;
 
-            // Extend rect to cover the full window width
             Rect stripeRect = new Rect(
                 0f,
                 selectionRect.y,
@@ -202,13 +165,11 @@ namespace EditorVisualTweaks
         {
             Color lineColor = LineColor;
 
-            // For root level (depth 0), draw an L-shape
             if (depth == 0)
             {
                 float rootVerticalX = 38f; // Fixed position for root vertical line
                                
 
-                // Vertical line (from top to middle of row)
                 Rect verticalRect = new Rect(
                     rootVerticalX,
                     selectionRect.y,
@@ -217,7 +178,6 @@ namespace EditorVisualTweaks
                 );
                 EditorGUI.DrawRect(verticalRect, lineColor);
                 
-                // Horizontal connector from vertical line to icon
                 float horizontalWidth = hasChildren 
                     ? selectionRect.x - rootVerticalX - 14f  // Leave space for fold-out arrow
                     : selectionRect.x - rootVerticalX;       // Extend to icon
@@ -232,12 +192,10 @@ namespace EditorVisualTweaks
                 return;
             }
 
-            // Draw vertical lines for each depth level
             for (int i = 0; i < depth; i++)
             {
                 float x = HIERARCHY_BASE_OFFSET + (i * HIERARCHY_INDENT) - 7f;
 
-                // Vertical line
                 Rect lineRect = new Rect(
                     x,
                     selectionRect.y,
@@ -248,8 +206,6 @@ namespace EditorVisualTweaks
                 EditorGUI.DrawRect(lineRect, lineColor);
             }
 
-            // Draw horizontal connector line
-            // If the object has no children, extend the line further (no fold-out arrow gap)
             float horizontalX = HIERARCHY_BASE_OFFSET + ((depth - 1) * HIERARCHY_INDENT) - 7f;
             float connectorWidth = hasChildren ? HIERARCHY_INDENT * 0.5f : HIERARCHY_INDENT + 5f;
             
@@ -266,16 +222,13 @@ namespace EditorVisualTweaks
         {
             Color lineColor = LineColor;
             
-            // In one-column layout, project items are indented
             float baseOffset = 22f;
             float indent = 14f;
             
-            // depth 1 means directly under Assets/ (root level in project)
             if (depth <= 1)
             {
                 float rootVerticalX = 8f; // Fixed position for root vertical line
                 
-                // Vertical line (from top to middle of row)
                 Rect verticalRect = new Rect(
                     rootVerticalX,
                     selectionRect.y,
@@ -284,7 +237,6 @@ namespace EditorVisualTweaks
                 );
                 EditorGUI.DrawRect(verticalRect, lineColor);
                 
-                // Horizontal connector from vertical line to icon
                 float horizontalWidth = hasChildren 
                     ? selectionRect.x - rootVerticalX - 14f
                     : selectionRect.x - rootVerticalX;
@@ -315,7 +267,6 @@ namespace EditorVisualTweaks
                 EditorGUI.DrawRect(lineRect, lineColor);
             }
 
-            // Horizontal connector - extend further if no children (no fold-out arrow)
             float horizontalX = baseOffset + ((visibleDepth - 1) * indent);
             float connectorWidth = hasChildren ? indent * 0.5f : indent + 9f;
             Rect horizontalRect = new Rect(
@@ -327,9 +278,6 @@ namespace EditorVisualTweaks
             EditorGUI.DrawRect(horizontalRect, lineColor);
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Utility Methods
-        // ─────────────────────────────────────────────────────────────────────
         private static int GetHierarchyDepth(Transform transform)
         {
             int depth = 0;
@@ -344,8 +292,6 @@ namespace EditorVisualTweaks
 
         private static int GetProjectDepth(string path)
         {
-            // Count the number of '/' separators
-            // "Assets/Folder/File.cs" -> depth = 2
             if (string.IsNullOrEmpty(path))
                 return 0;
 
@@ -368,9 +314,6 @@ namespace EditorVisualTweaks
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Settings Provider for Preferences Window
-    // ─────────────────────────────────────────────────────────────────────────
     public static class EditorVisualTweaksSettingsProvider
     {
         [SettingsProvider]
@@ -425,7 +368,6 @@ namespace EditorVisualTweaks
             EditorGUI.indentLevel--;
             EditorGUILayout.Space(20);
 
-            // Info box
             EditorGUILayout.HelpBox(
                 "Zebra stripes and hierarchy lines only apply to list views, not icon/grid views.",
                 MessageType.Info
